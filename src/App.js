@@ -6,7 +6,7 @@ import 'chart.js/auto';
 
 // --- CONFIGURATION ---
 const SUPABASE_URL = 'https://fgtecozbafozehedthlq.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_Kc9W9PuMbUoFg31Y7BdKcA_11Fveyve';
+const SUPABASE_KEY = 'sb_publishable_Kc9W9PuMbUoFg31Y7BdKcA_l1Fveyve';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default function App() {
