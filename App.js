@@ -4,7 +4,7 @@ import { Bar, Pie, Line } from 'react-chartjs-2';
 import { ClipboardList, BarChart3, Send, Smartphone, Moon, Brain, AlertTriangle } from 'lucide-react';
 import 'chart.js/auto';
 
-const supabase = createClient('YOUR_URL', 'YOUR_KEY');
+const supabase = createClient('https://fgtecozbafozehedthlq.supabase.co', 'sb_publishable_Kc9W9PuMbUoFg31Y7BdKcA_l1Fveyve');
 
 export default function App() {
   const [view, setView] = useState('survey');
