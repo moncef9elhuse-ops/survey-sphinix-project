@@ -22,8 +22,8 @@ ChartJS.register(
 // 1. SYSTEM CONFIGURATION & CORE CONSTANTS
 // ============================================================================
 const TITAN_CONFIG = {
-  SUPABASE_URL: 'PASTE_YOUR_SUPABASE_URL_HERE',
-  SUPABASE_KEY: 'PASTE_YOUR_SUPABASE_ANON_KEY_HERE',
+  SUPABASE_URL: 'https://fgtecozbafozehedthlq.supabase.co',
+  SUPABASE_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZndGVjb3piYWZvemVoZWR0aGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzU2NDksImV4cCI6MjA4NTM1MTY0OX0.vMKJ-Kb5UqBO1OiokGsv2ayb51AXL79HCzcrUD7WZ0w',
   VERSION: '5.0.1-PRO',
   ADMIN_PASS: 'TITAN2026',
   THEME_STORAGE_KEY: 'titan_theme_pref'
