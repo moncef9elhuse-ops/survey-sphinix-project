@@ -10,7 +10,7 @@ import 'chart.js/auto';
 
 // --- DATABASE CONFIG ---
 const SUPABASE_URL = 'https://fgtecozbafozehedthlq.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_Kc9W9PuMbUoFg31Y7BdKcA_11Fveyve'; 
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZndGVjb3piYWZvemVoZWR0aGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzU2NDksImV4cCI6MjA4NTM1MTY0OX0.vMKJ-Kb5UqBO1OiokGsv2ayb51AXL79HCzcrUD7WZ0w'; 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default function App() {
