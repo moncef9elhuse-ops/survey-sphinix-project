@@ -25,8 +25,8 @@ ChartJS.register(
  * CORE CONFIGURATION
  * Replace these placeholders to fix the "Invalid API Key" error.
  */
-const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE'; 
-const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE'; 
+const SUPABASE_URL = 'https://fgtecozbafozehedthlq.supabase.co'; 
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZndGVjb3piYWZvemVoZWR0aGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzU2NDksImV4cCI6MjA4NTM1MTY0OX0.vMKJ-Kb5UqBO1OiokGsv2ayb51AXL79HCzcrUD7WZ0w'; 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // --- COMPREHENSIVE QUESTION SCHEMA ---
