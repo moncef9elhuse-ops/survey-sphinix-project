@@ -1,185 +1,161 @@
 import React, { useState, useEffect } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Bar, Pie } from 'react-chartjs-2';
-import { ClipboardList, BarChart3, Lock, RefreshCcw, Download, CheckCircle, Smartphone, Moon, Sun, Brain, Zap, Target } from 'lucide-react';
-import 'chart.js/auto';
+import { ClipboardList, CheckCircle, Smartphone, Moon, Sun, Brain, Zap, Target, Clock, Coffee, Heart } from 'lucide-react';
 
-// Ensure these match your Supabase Dashboard API settings
 const SUPABASE_URL = 'https://fgtecozbafozehedthlq.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_Kc9W9PuMbUoFg31Y7BdKcA_11Fveyve'; 
+const SUPABASE_KEY = 'sb_publishable_Kc9W9PuMbUoFg31Y7BdKcA_l1Fveyve';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 export default function App() {
-  const [view, setView] = useState('survey'); 
-  const [responses, setResponses] = useState([]);
+  const [view, setView] = useState('survey');
   const [loading, setLoading] = useState(false);
-  const [adminPass, setAdminPass] = useState('');
-  const [isAuthorized, setIsAuthorized] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const [form, setForm] = useState({
-    q1_time: 'Je révise régulièrement', q5: 3, q6: 'Assez tôt',
-    q7: 3, q8: 3, q9: 3, q10: 'Moyennement',
-    q11: 3, q12: 'Moyennement', q14: 'Moyennement',
-    q15: 3, q16: 3, q17: 'Moyennement préparé(e)', q20: 'Je progresse régulièrement'
+    q1_organisation: '', q2_frequence: '', q3_duree: '', q4_methode: '', q5_procrastination: 3, q6_moment_travail: '',
+    q7_usage_tel: 3, q8_perte_temps: 3, q9_concentration: 3, q10_fatigue_ecran: '', q11_reseaux_sociaux: 3, q12_mode_avion: '',
+    q13_stress_niveau: 3, q14_moment_stress: '', q15_physique_stress: '', q16_pression_reussite: '', q17_anxiete_examen: 3, q18_soutien_moral: '',
+    q19_regularite_sommeil: 3, q20_satisfaction_sommeil: 3, q21_heures_nuit: '', q22_ecran_avant_dodo: '', q23_reveils_nocturnes: 1, q24_siestes: '',
+    q25_preparation_exam: '', q26_difficulte_matiere: '', q27_environnement: '', q28_objectifs: '', q29_motivation_actuelle: 3, q30_confiance_futur: ''
   });
 
   useEffect(() => {
-    const filled = Object.values(form).filter(v => v !== '').length;
+    const filled = Object.values(form).filter(v => v !== '' && v !== 0).length;
     setProgress((filled / Object.keys(form).length) * 100);
   }, [form]);
-
-  const fetchData = async () => {
-    setLoading(true);
-    const { data } = await supabase.from('student_surveys').select('*').order('created_at', { ascending: false });
-    if (data) setResponses(data);
-    setLoading(false);
-  };
-
-  const handleAdminLogin = (e) => {
-    e.preventDefault();
-    if (adminPass === 'ADMIN123') { setIsAuthorized(true); fetchData(); setView('dashboard'); }
-    else { alert("Accès refusé"); }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      const { error } = await supabase.from('student_surveys').insert([{
-        q1_time: form.q1_time, q5_procr_freq: form.q5, q6_start: form.q6,
-        q7_phone_use: form.q7, q8_time_loss: form.q8, q9_concentr: form.q9, q10_fatigue: form.q10,
-        q11_stress: form.q11, q12_time_stress: form.q12, q14_pressure: form.q14,
-        q15_sleep_reg: form.q15, q16_sleep_sat: form.q16, q17_prep: form.q17, q20_goals: form.q20
-      }]);
-      if (error) throw error;
-      setView('success');
-    } catch (err) { alert("Erreur: " + err.message); }
-    finally { setLoading(false); }
+    const { error } = await supabase.from('student_surveys').insert([form]);
+    setLoading(false);
+    if (!error) setView('success');
+    else alert("Database Error: " + error.message);
   };
 
   return (
     <div className={darkMode ? 'dark' : ''}>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-500">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-all duration-500 pb-20">
         
-        {view === 'survey' && (
-          <div className="fixed top-0 left-0 w-full h-1.5 bg-slate-200 dark:bg-slate-800 z-[100]">
-            <div className="h-full bg-indigo-600 transition-all duration-500" style={{ width: `${progress}%` }}></div>
-          </div>
-        )}
+        <div className="fixed top-0 left-0 w-full h-1.5 bg-slate-200 dark:bg-slate-800 z-[100]">
+          <div className="h-full bg-indigo-600 transition-all duration-500 shadow-[0_0_15px_#4f46e5]" style={{ width: `${progress}%` }}></div>
+        </div>
 
         <nav className="flex justify-between items-center p-4 px-8 sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl z-50 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex gap-4">
-            <button onClick={() => setView('survey')} className={`px-4 py-2 rounded-xl font-bold ${view === 'survey' ? 'bg-indigo-600 text-white' : ''}`}>Sondage</button>
-            <button onClick={() => setView(isAuthorized ? 'dashboard' : 'admin-login')} className={`px-4 py-2 rounded-xl font-bold ${view === 'dashboard' ? 'bg-slate-900 text-white' : ''}`}>Analyse</button>
-          </div>
-          <button onClick={() => setDarkMode(!darkMode)} className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
+          <h2 className="font-black italic text-indigo-600">SPHINX 30</h2>
+          <button onClick={() => setDarkMode(!darkMode)} className="p-3 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 transition-all active:scale-90">
             {darkMode ? <Sun size={20} className="text-yellow-400" /> : <Moon size={20} className="text-indigo-600" />}
           </button>
         </nav>
 
-        <div className="max-w-3xl mx-auto px-6 py-12">
+        <div className="max-w-3xl mx-auto px-6 mt-12">
           {view === 'survey' && (
-            <form onSubmit={handleSubmit} className="space-y-8 animate-in fade-in duration-700">
-              <div className="text-center space-y-2">
-                <h1 className="text-4xl font-black tracking-tighter uppercase italic">Sphinx 2026</h1>
-                <p className="text-slate-500 font-medium">Bilan Réussite & Habitudes</p>
-              </div>
+            <form onSubmit={handleSubmit} className="space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
+              <header className="text-center space-y-4">
+                <span className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em]">Sondage Académique Complet</span>
+                <h1 className="text-5xl font-black tracking-tighter">Bilan Étudiant</h1>
+                <p className="text-slate-500 dark:text-slate-400 max-w-sm mx-auto">Veuillez répondre avec sincérité pour des résultats optimaux.</p>
+              </header>
 
-              <Section title="Gestion du Temps" icon={<Zap className="text-amber-500"/>}>
-                <Question label="Q1. Organisation des révisions">
-                  <select className="w-full p-4 rounded-2xl border-2 dark:bg-slate-900 border-slate-100 dark:border-slate-800" onChange={e => setForm({...form, q1_time: e.target.value})}>
-                    <option>Je révise peu</option><option>Je révise régulièrement</option><option>Je révise intensivement</option>
+              <Section title="1. Méthodes de Travail" icon={<Clock className="text-amber-500"/>}>
+                <Question label="Q1. Organisation globale">
+                  <select className="input-style" onChange={e => setForm({...form, q1_organisation: e.target.value})}>
+                    <option value="">Choisir...</option><option>Planning strict</option><option>Au feeling</option><option>Dernière minute</option>
                   </select>
                 </Question>
-                <Question label="Q5. Report des tâches (1: Jamais, 5: Toujours)">
-                  <input type="range" min="1" max="5" className="w-full h-2 accent-indigo-600" onChange={e => setForm({...form, q5: parseInt(e.target.value)})} />
+                <Question label="Q5. Niveau de procrastination (1-5)">
+                  <input type="range" min="1" max="5" className="range-style" onChange={e => setForm({...form, q5_procrastination: parseInt(e.target.value)})} />
                 </Question>
               </Section>
 
-              <Section title="Usage Numérique" icon={<Smartphone className="text-blue-500"/>}>
-                <Question label="Q7. Téléphone pendant les révisions (1-5)">
-                  <input type="range" min="1" max="5" className="w-full h-2 accent-indigo-600" onChange={e => setForm({...form, q7: parseInt(e.target.value)})} />
+              <Section title="2. Environnement Numérique" icon={<Smartphone className="text-blue-500"/>}>
+                <Question label="Q7. Usage du téléphone en travaillant (1-5)">
+                  <input type="range" min="1" max="5" className="range-style" onChange={e => setForm({...form, q7_usage_tel: parseInt(e.target.value)})} />
                 </Question>
-                <Question label="Q10. Impression de fatigue liée au téléphone">
-                  <select className="w-full p-4 rounded-2xl border-2 dark:bg-slate-900 border-slate-100 dark:border-slate-800" onChange={e => setForm({...form, q10: e.target.value})}>
-                    <option>Pas du tout</option><option>Moyennement</option><option>Énormément</option>
-                  </select>
-                </Question>
-              </Section>
-
-              <Section title="Psychologie & Sommeil" icon={<Brain className="text-purple-500"/>}>
-                <Question label="Q11. Niveau de stress (1-5)">
-                  <input type="range" min="1" max="5" className="w-full h-2 accent-indigo-600" onChange={e => setForm({...form, q11: parseInt(e.target.value)})} />
-                </Question>
-                <Question label="Q16. Qualité du sommeil (1-5)">
-                  <input type="range" min="1" max="5" className="w-full h-2 accent-indigo-600" onChange={e => setForm({...form, q16: parseInt(e.target.value)})} />
-                </Question>
-                <Question label="Q17. Préparation aux examens">
-                  <select className="w-full p-4 rounded-2xl border-2 dark:bg-slate-900 border-slate-100 dark:border-slate-800" onChange={e => setForm({...form, q17: e.target.value})}>
-                    <option>Très bien préparé(e)</option><option>Moyennement préparé(e)</option><option>Pas du tout préparé(e)</option>
+                <Question label="Q12. Utilisez-vous le mode 'Ne pas déranger' ?">
+                  <select className="input-style" onChange={e => setForm({...form, q12_mode_avion: e.target.value})}>
+                    <option value="">Choisir...</option><option>Systématiquement</option><option>Parfois</option><option>Jamais</option>
                   </select>
                 </Question>
               </Section>
 
-              <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white p-6 rounded-[2rem] font-black text-xl hover:bg-indigo-700 active:scale-95 transition-all shadow-xl shadow-indigo-500/20">
-                {loading ? "ENVOI..." : "SOUMETTRE MON BILAN"}
+              <Section title="3. Bien-être & Mental" icon={<Brain className="text-purple-500"/>}>
+                <Question label="Q13. Stress ressenti actuellement (1-5)">
+                  <input type="range" min="1" max="5" className="range-style" onChange={e => setForm({...form, q13_stress_niveau: parseInt(e.target.value)})} />
+                </Question>
+                <Question label="Q18. Avez-vous un soutien moral suffisant ?">
+                  <select className="input-style" onChange={e => setForm({...form, q18_soutien_moral: e.target.value})}>
+                    <option value="">Choisir...</option><option>Oui, totalement</option><option>Partiellement</option><option>Pas assez</option>
+                  </select>
+                </Question>
+              </Section>
+
+              <Section title="4. Cycle du Sommeil" icon={<Coffee className="text-cyan-500"/>}>
+                <Question label="Q20. Satisfaction de votre repos (1-5)">
+                  <input type="range" min="1" max="5" className="range-style" onChange={e => setForm({...form, q20_satisfaction_sommeil: parseInt(e.target.value)})} />
+                </Question>
+                <Question label="Q22. Écran moins de 30min avant le dodo ?">
+                  <select className="input-style" onChange={e => setForm({...form, q22_ecran_avant_dodo: e.target.value})}>
+                    <option value="">Choisir...</option><option>Rarement</option><option>Parfois</option><option>Toujours</option>
+                  </select>
+                </Question>
+              </Section>
+
+              <Section title="5. Ambitions & Futur" icon={<Target className="text-emerald-500"/>}>
+                <Question label="Q29. Motivation actuelle (1-5)">
+                  <input type="range" min="1" max="5" className="range-style" onChange={e => setForm({...form, q29_motivation_actuelle: parseInt(e.target.value)})} />
+                </Question>
+                <Question label="Q30. Confiance en votre avenir professionnel">
+                  <select className="input-style" onChange={e => setForm({...form, q30_confiance_futur: e.target.value})}>
+                    <option value="">Choisir...</option><option>Très confiant</option><option>Incertain</option><option>Anxieux</option>
+                  </select>
+                </Question>
+              </Section>
+
+              <button type="submit" disabled={loading} className="w-full bg-indigo-600 text-white p-8 rounded-[2.5rem] font-black text-2xl hover:bg-indigo-700 shadow-2xl shadow-indigo-500/40 transition-all hover:-translate-y-1 active:scale-95">
+                {loading ? "TRANSFERT EN COURS..." : "TRANSMETTRE MON BILAN COMPLET"}
               </button>
             </form>
           )}
 
-          {view === 'admin-login' && !isAuthorized && (
-            <div className="bg-white dark:bg-slate-900 p-12 rounded-[2.5rem] shadow-2xl text-center border border-slate-100 dark:border-slate-800 max-w-md mx-auto">
-              <Lock size={48} className="mx-auto text-indigo-600 mb-6" />
-              <h2 className="text-2xl font-black mb-6">Accès Sécurisé</h2>
-              <form onSubmit={handleAdminLogin} className="space-y-4">
-                <input type="password" placeholder="Pass..." className="w-full p-4 bg-slate-50 dark:bg-slate-800 border-2 border-transparent rounded-2xl text-center" value={adminPass} onChange={e => setAdminPass(e.target.value)} />
-                <button type="submit" className="w-full bg-indigo-600 text-white p-4 rounded-2xl font-bold">ENTRER</button>
-              </form>
-            </div>
-          )}
-
-          {view === 'dashboard' && isAuthorized && (
-            <div className="space-y-8 animate-in fade-in duration-500">
-               <div className="flex justify-between items-center bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800">
-                <h2 className="text-xl font-bold">Dash Sphinx</h2>
-                <div className="flex gap-2">
-                  <button onClick={fetchData} className="p-3 bg-indigo-50 text-indigo-600 rounded-xl"><RefreshCcw size={18} className={loading ? 'animate-spin' : ''}/></button>
-                </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 h-80">
-                  <Bar data={{
-                    labels: ['Stress', 'Tél.', 'Sommeil'],
-                    datasets: [{ label: 'Score Moyen', data: [
-                      responses.reduce((a, b) => a + (b.q11_stress || 0), 0) / responses.length || 0,
-                      responses.reduce((a, b) => a + (b.q7_phone_use || 0), 0) / responses.length || 0,
-                      responses.reduce((a, b) => a + (b.q16_sleep_sat || 0), 0) / responses.length || 0
-                    ], backgroundColor: '#6366f1' }]
-                  }} />
-                </div>
-              </div>
-            </div>
-          )}
-
           {view === 'success' && (
-            <div className="bg-white dark:bg-slate-900 p-16 rounded-[3rem] shadow-2xl text-center border border-indigo-50 dark:border-indigo-900/30">
-              <CheckCircle size={80} className="mx-auto text-emerald-500 mb-6 animate-bounce" />
-              <h2 className="text-4xl font-black mb-4 tracking-tighter">SUCCESS !</h2>
-              <p className="text-slate-500 dark:text-slate-400 mb-10 text-lg">Tes données sont maintenant dans la base Sphinx.</p>
-              <button onClick={() => setView('survey')} className="bg-indigo-600 text-white px-10 py-4 rounded-2xl font-black shadow-lg">Nouvelle Réponse</button>
+            <div className="text-center bg-white dark:bg-slate-900 p-20 rounded-[4rem] shadow-2xl border-4 border-emerald-50 dark:border-emerald-900/20 animate-in zoom-in">
+              <div className="w-24 h-24 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto mb-8"><CheckCircle size={48} /></div>
+              <h2 className="text-5xl font-black mb-4">BRAVO !</h2>
+              <p className="text-slate-500 text-xl font-medium">Les 30 points d'analyse ont été envoyés à Sphinx.</p>
+              <button onClick={() => window.location.reload()} className="mt-12 bg-slate-900 dark:bg-indigo-600 text-white px-12 py-5 rounded-3xl font-black text-lg tracking-widest">NOUVEAU SONDAGE</button>
             </div>
           )}
         </div>
       </div>
+      
+      {/* Dynamic Style Injection */}
+      <style>{`
+        .input-style { @apply w-full p-5 rounded-[1.5rem] border-2 bg-transparent border-slate-100 dark:border-slate-800 focus:border-indigo-600 outline-none font-bold transition-all; }
+        .range-style { @apply w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-xl appearance-none cursor-pointer accent-indigo-600 shadow-inner; }
+      `}</style>
     </div>
   );
 }
 
-function Section({ title, icon, children }) { 
-  return (<div className="bg-white dark:bg-slate-900 p-8 rounded-[2.5rem] border border-slate-100 dark:border-slate-800 shadow-sm"><div className="flex items-center gap-3 mb-8"><div className="p-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl">{icon}</div><h3 className="font-black text-xs uppercase tracking-widest text-slate-400">{title}</h3></div><div className="space-y-8">{children}</div></div>); 
+function Section({ title, icon, children }) {
+  return (
+    <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md p-10 rounded-[3.5rem] border border-white dark:border-slate-800 shadow-sm transition-all hover:shadow-2xl">
+      <div className="flex items-center gap-4 mb-10">
+        <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-3xl shadow-sm">{icon}</div>
+        <h3 className="font-black text-sm uppercase tracking-[0.3em] text-slate-400">{title}</h3>
+      </div>
+      <div className="space-y-10">{children}</div>
+    </div>
+  );
 }
-function Question({ label, children }) { 
-  return (<div className="space-y-4"><label className="block font-black text-lg tracking-tight">{label}</label>{children}</div>); 
+
+function Question({ label, children }) {
+  return (
+    <div className="space-y-5">
+      <label className="block font-black text-2xl tracking-tighter leading-tight">{label}</label>
+      {children}
+    </div>
+  );
 }
