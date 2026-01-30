@@ -11,7 +11,7 @@ import {
 const SUPABASE_URL = 'https://fgtecozbafozehedthlq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZndGVjb3piYWZvemVoZWR0aGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzU2NDksImV4cCI6MjA4NTM1MTY0OX0.vMKJ-Kb5UqBO1OiokGsv2ayb51AXL79HCzcrUD7WZ0w';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-const ADMIN_PASS = 'TITAN2026';
+const ADMIN_PASS = 'MONCEF2006';
 
 const SURVEY_SCHEMA = [
   {
@@ -140,7 +140,7 @@ export default function App() {
       <nav className="fixed top-0 w-full z-50 p-6 flex justify-between items-center backdrop-blur-xl border-b border-black/5 dark:border-white/10">
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('landing')}>
           <Zap className="text-indigo-600" fill="currentColor"/>
-          <span className="font-black italic uppercase text-xl tracking-tighter">Sphinx<span className="text-indigo-500">.V5</span></span>
+          <span className="font-black italic uppercase text-xl tracking-tighter">MONCEFs<span className="text-indigo-500">.Tool.v1</span></span>
         </div>
         <div className="flex gap-3">
           <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-3 bg-white dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10">
@@ -154,9 +154,9 @@ export default function App() {
         
         {view === 'landing' && (
           <div className="text-center py-20 space-y-10 animate-in fade-in zoom-in">
-            <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-none">Audit<br/><span className="text-indigo-500 text-6xl md:text-8xl">Académique</span></h1>
+            <h1 className="text-7xl md:text-9xl font-black italic uppercase tracking-tighter leading-none">Moncef s <br/><span className="text-indigo-500 text-6xl md:text-8xl">Tool</span></h1>
             <p className="text-xl font-bold opacity-40 max-w-lg mx-auto leading-relaxed">Protocole de recherche standardisé 2026.</p>
-            <button onClick={() => setView('identity')} className="bg-indigo-600 text-white font-black uppercase tracking-widest py-6 px-16 rounded-2xl shadow-xl hover:scale-105 transition-transform">Initialiser</button>
+            <button onClick={() => setView('identity')} className="bg-indigo-600 text-white font-black uppercase tracking-widest py-6 px-16 rounded-2xl shadow-xl hover:scale-105 transition-transform">lets start</button>
           </div>
         )}
 
