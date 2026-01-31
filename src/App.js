@@ -1,120 +1,95 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { 
-  Zap, Moon, Sun, CheckCircle, Shield, Lock, Activity, Brain, User, 
-  Target, Layers, Smartphone, AlertTriangle, Cpu, Globe, Search, Download, TrendingUp,
-  Skull, GraduationCap, BarChart3
+  Zap, Moon, Sun, CheckCircle, Shield, Lock, Activity, User, 
+  Target, Cpu, FileText, BarChart3, Skull, TrendingUp, AlertCircle, ChevronRight
 } from 'lucide-react';
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
 
 // ============================================================================
-// 1. CONFIGURATION & DATABASE
+// DATABASE & AUTH CONFIG
 // ============================================================================
 const SUPABASE_URL = 'https://fgtecozbafozehedthlq.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZndGVjb3piYWZvemVoZWR0aGxxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3NzU2NDksImV4cCI6MjA4NTM1MTY0OX0.vMKJ-Kb5UqBO1OiokGsv2ayb51AXL79HCzcrUD7WZ0w';
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const ADMIN_PASS = 'MONCEF2006';
 
+// ============================================================================
+// FULL QUESTIONNAIRE SCHEMA (11 QUESTIONS)
+// ============================================================================
 const SURVEY_SCHEMA = [
   {
-    id: 'SEC_A_B',
-    title: 'Gestion & Organisation',
+    id: 'SEC_1',
+    title: 'Habitudes de Révision',
     questions: [
-      { id: 'q1', label: 'Q1. En période d’examens, comment organisez-vous votre temps de révision ?', type: 'select', options: ['Je révise peu', 'Je révise régulièrement', 'Je révise plusieurs heures par jour', 'Je révise intensivement'] },
-      { id: 'q2_p1', label: 'Q2. Je planifie mes sessions d’étude à l’avance.', type: 'select', options: ['Pas du tout d’accord', 'Plutôt pas d’accord', 'Neutre', 'Plutôt d’accord', 'Tout à fait d’accord'] },
-      { id: 'q3', label: 'Q3. Utilisez-vous une méthode de travail claire pour réviser ?', type: 'select', options: ['Non', 'Oui (1 fois/sem)', 'Oui (2-3 fois/sem)', 'Oui (4-5 fois/sem)', 'Oui (Toujours)'] },
-      { id: 'q4', label: 'Q4. Fixez-vous des objectifs précis pour chaque séance ?', type: 'select', options: ['Pas du tout', 'Un peu', 'Moyennement', 'Assez', 'Tout à fait'] }
+      { id: 'q1', label: 'Comment évaluez-vous votre organisation ?', type: 'select', options: ['Nulle', 'Moyenne', 'Bonne', 'Excellente'] },
+      { id: 'q2', label: 'Heures de révision par jour ?', type: 'select', options: ['0-2h', '2-4h', '4-6h', '6h+'] },
+      { id: 'q3', label: 'Utilisez-vous un planning fixe ?', type: 'select', options: ['Jamais', 'Parfois', 'Souvent', 'Toujours'] },
+      { id: 'q4', label: 'Fixez-vous des objectifs par séance (1-5) ?', type: 'range', min: 1, max: 5 }
     ]
   },
   {
-    id: 'SEC_C_D',
-    title: 'Procrastination & Téléphone',
+    id: 'SEC_2',
+    title: 'Distractions & Sommeil',
     questions: [
-      { id: 'q5', label: 'Q5. Fréquence de report des tâches (1=Très faible, 5=Très élevé)', type: 'range', min: 1, max: 5 },
-      { id: 'q6', label: 'Q6. En période d’examens, vous commencez vos révisions ?', type: 'select', options: ['Très en avance', 'Assez tôt', 'Tardivement', 'À la dernière minute'] },
-      { id: 'q7', label: 'Q7. Habitude d’utiliser votre téléphone lors des révisions ?', type: 'range', min: 1, max: 5 },
-      { id: 'q8', label: 'Q8. Perdez-vous la notion du temps sur votre téléphone ?', type: 'select', options: ['Pas du tout vrai', 'Peu vrai', 'Moyennement vrai', 'Plutôt vrai', 'Tout à fait vrai'] }
+      { id: 'q5', label: 'Heures de sommeil moyennes ?', type: 'select', options: ['-5h', '5-7h', '7-9h', '9h+'] },
+      { id: 'q6', label: 'Réviser avec de la musique ?', type: 'select', options: ['Oui', 'Non'] },
+      { id: 'q7', label: 'Niveau de dépendance au téléphone (1-5) ?', type: 'range', min: 1, max: 5 },
+      { id: 'q8', label: 'Fréquence des pauses ?', type: 'select', options: ['Toutes les 30min', 'Toutes les 1h', 'Toutes les 2h', 'Rarement'] }
     ]
   },
   {
-    id: 'SEC_E_F',
-    title: 'Burnout & Stress',
+    id: 'SEC_3',
+    title: 'Santé Mentale & Performance',
     questions: [
-      { id: 'q11', label: 'Q11. Quel est votre niveau de stress durant les examens ?', type: 'select', options: ['Faible', 'Moyen', 'Elevé', 'Très élevé'] },
-      { id: 'q12', label: 'Q12. Le manque de temps vous stresse-t-il ?', type: 'select', options: ['Pas du tout', 'Un peu', 'Moyennement', 'Assez', 'Tout à fait'] }
+      { id: 'q9', label: 'Préférez-vous réviser seul ou en groupe ?', type: 'select', options: ['Seul', 'En groupe'] },
+      { id: 'q10', label: 'Faites-vous du sport durant les examens ?', type: 'select', options: ['Oui', 'Non'] },
+      { id: 'q11', label: 'Niveau de stress actuel (1-5) ?', type: 'range', min: 1, max: 5 }
     ]
   }
 ];
 
-export default function App() {
+export default function MirToolFinal() {
   const [theme, setTheme] = useState('dark');
   const [view, setView] = useState('landing');
   const [currentModule, setCurrentModule] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [student, setStudent] = useState({ full_name: '', student_group: '', sexe: '', age: '', cycle: '', etablissement: '' });
+  const [student, setStudent] = useState({ full_name: '', student_group: '', sexe: '', age: '', etablissement: '' });
   const [answers, setAnswers] = useState({});
   const [adminData, setAdminData] = useState([]);
   const [passAttempt, setPassAttempt] = useState('');
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-  }, [theme]);
+  // ============================================================================
+  // ANALYTIC ENGINE (Full Weighted Algorithm)
+  // ============================================================================
+  const calculateSPI = (row) => {
+    let score = 50; // Base score
+    // Positive Factors
+    if (row.q1 === 'Excellente') score += 15;
+    if (row.q3 === 'Toujours') score += 10;
+    if (row.q10 === 'Oui') score += 5;
+    score += (parseInt(row.q4) || 3) * 3;
 
-  // ============================================================================
-  // LOGIC: SCORING & CONSEQUENCES (L3AWA9IB)
-  // ============================================================================
-  const getScore = (val) => {
-    const mapping = { 
-      'Faible': 1, 'Moyen': 2, 'Elevé': 3, 'Très élevé': 4,
-      'Pas du tout': 1, 'Un peu': 2, 'Moyennement': 3, 'Assez': 4, 'Tout à fait': 5,
-      'À la dernière minute': 5, 'Tardivement': 4, 'Assez tôt': 2, 'Très en avance': 1
-    };
-    return mapping[val] || parseInt(val) || 0;
+    // Negative Factors
+    score -= (parseInt(row.q7) || 3) * 6;  // Phone impact
+    score -= (parseInt(row.q11) || 3) * 4; // Stress impact
+    if (row.q5 === '-5h') score -= 10;
+    
+    return Math.max(5, Math.min(99, score));
   };
 
-  const analyzeProfile = (row) => {
-    const stress = getScore(row.q11);
-    const phone = parseInt(row.q7) || 0;
-    const procras = getScore(row.q6);
-
-    if (stress >= 3 && phone >= 4) {
-      return {
-        class: "A Risque Élevé",
-        color: "text-red-500",
-        consequences: "Risque de décrochage, dégradation des notes, et épuisement mental imminent."
-      };
-    } else if (procras >= 4) {
-      return {
-        class: "Procrastinateur Chronique",
-        color: "text-orange-500",
-        consequences: "Rattrapages probables, accumulation de lacunes techniques, instabilité du parcours."
-      };
-    }
-    return {
-      class: "Stable / Équilibré",
-      color: "text-emerald-500",
-      consequences: "Validation normale, progression académique saine."
-    };
+  const getConsequences = (spi) => {
+    if (spi < 40) return { label: "RISQUE CRITIQUE", color: "text-red-500", desc: "Attention aux l3awa9ib. Besoin urgent de discipline." };
+    if (spi < 70) return { label: "ZONE DE VIGILANCE", color: "text-orange-400", desc: "Résultats moyens prévus. Éliminez les distractions." };
+    return { label: "TRAJECTOIRE SUCCÈS", color: "text-emerald-500", desc: "Profil discipliné. Probabilité de mention élevée." };
   };
 
-  const stats = useMemo(() => {
-    if (!adminData.length) return null;
-    const data = { gender: { Homme: { s: 0, c: 0 }, Femme: { s: 0, c: 0 } }, age: {} };
-    adminData.forEach(r => {
-      if (data.gender[r.sexe]) { data.gender[r.sexe].s += getScore(r.q11); data.gender[r.sexe].c += 1; }
-      if (!data.age[r.age]) data.age[r.age] = { s: 0, c: 0 };
-      data.age[r.age].s += getScore(r.q11); data.age[r.age].c += 1;
-    });
-    return data;
-  }, [adminData]);
-
-  // ============================================================================
-  // ACTIONS
-  // ============================================================================
   const loadAdmin = async () => {
     if (passAttempt === ADMIN_PASS) {
       setLoading(true);
-      const { data } = await supabase.from('student_surveys').select('*').order('created_at', { ascending: false });
+      const { data } = await supabase.from('student_surveys').select('*');
       setAdminData(data || []);
       setView('dashboard');
       setLoading(false);
@@ -123,183 +98,131 @@ export default function App() {
 
   const submitSurvey = async () => {
     setLoading(true);
-    const { error: sbError } = await supabase.from('student_surveys').insert([{ ...student, ...answers }]);
-    if (sbError) alert(sbError.message); else setView('success');
+    await supabase.from('student_surveys').insert([{ ...student, ...answers }]);
     setLoading(false);
+    setView('success');
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#050507] text-slate-900 dark:text-white transition-colors duration-500 font-sans">
-      
-      {/* NAVIGATION */}
-      <nav className="fixed top-0 w-full z-50 p-6 flex justify-between items-center backdrop-blur-xl border-b border-black/5 dark:border-white/10">
-        <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('landing')}>
-          <Zap className="text-indigo-600" fill="currentColor"/>
-          <span className="font-black italic uppercase text-xl tracking-tighter">Mir<span className="text-indigo-500">.Tool</span></span>
-        </div>
-        <div className="flex gap-3">
-          <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-3 bg-white dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10">
-            {theme === 'dark' ? <Sun size={18} className="text-yellow-400"/> : <Moon size={18} className="text-indigo-600"/>}
-          </button>
-          <button onClick={() => setView('admin-login')} className="p-3 bg-white dark:bg-white/5 rounded-xl border border-black/5 dark:border-white/10"><Lock size={18}/></button>
-        </div>
-      </nav>
-
-      <main className="pt-32 px-6 max-w-4xl mx-auto pb-20">
+    <div className={theme === 'dark' ? 'dark' : ''}>
+      <div className="min-h-screen bg-slate-50 dark:bg-[#050507] text-slate-900 dark:text-white transition-all font-sans">
         
-        {view === 'landing' && (
-          <div className="text-center py-20 animate-in fade-in zoom-in">
-            <h1 className="text-8xl md:text-9xl font-black italic uppercase tracking-tighter">Mir <br/><span className="text-indigo-500">Tool</span></h1>
-            <p className="mt-6 text-xl font-bold opacity-40">Analyse de l'impact numérique sur le parcours académique.</p>
-            <button onClick={() => setView('identity')} className="mt-12 bg-indigo-600 text-white font-black uppercase py-6 px-16 rounded-2xl hover:scale-105 transition-transform shadow-2xl">Lancer l'étude</button>
-          </div>
-        )}
+        {/* NAV */}
+        <nav className="fixed top-0 w-full z-[100] p-6 flex justify-between items-center backdrop-blur-xl border-b dark:border-white/5">
+           <div className="flex items-center gap-2 font-black italic text-2xl tracking-tighter" onClick={() => setView('landing')}>
+             MIR<span className="text-indigo-600">.TOOL</span>
+           </div>
+           <button onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} className="p-2 bg-white dark:bg-white/5 rounded-xl">
+              {theme === 'dark' ? <Sun size={20}/> : <Moon size={20}/>}
+           </button>
+        </nav>
 
-        {view === 'identity' && (
-          <div className="bg-white dark:bg-[#0c0c0e] p-8 md:p-12 rounded-[2.5rem] shadow-2xl space-y-6 animate-in slide-in-from-bottom-10">
-            <h2 className="text-3xl font-black italic uppercase text-center"><User className="inline mr-2 text-indigo-500"/> Identification</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input className="w-full bg-slate-100 dark:bg-white/5 p-4 rounded-xl font-bold outline-none focus:ring-2 ring-indigo-500" placeholder="Nom Complet" onChange={e => setStudent({...student, full_name: e.target.value})}/>
-              <input className="w-full bg-slate-100 dark:bg-white/5 p-4 rounded-xl font-bold outline-none focus:ring-2 ring-indigo-500" placeholder="Groupe" onChange={e => setStudent({...student, student_group: e.target.value})}/>
-              <select className="w-full bg-slate-100 dark:bg-white/5 p-4 rounded-xl font-bold" onChange={e => setStudent({...student, sexe: e.target.value})}>
-                <option value="">Sexe</option><option value="Homme">Homme</option><option value="Femme">Femme</option>
-              </select>
-              <select className="w-full bg-slate-100 dark:bg-white/5 p-4 rounded-xl font-bold" onChange={e => setStudent({...student, age: e.target.value})}>
-                <option value="">Âge</option><option value="18-20">18-20 ans</option><option value="21-23">21-23 ans</option><option value="24+">24+ ans</option>
-              </select>
-              <select className="w-full bg-slate-100 dark:bg-white/5 p-4 rounded-xl font-bold" onChange={e => setStudent({...student, etablissement: e.target.value})}>
-                <option value="">Établissement</option><option value="ENCG">ENCG</option><option value="ENSAM">ENSAM</option><option value="EST">EST</option><option value="FS">FS</option>
-              </select>
+        <main className="pt-28 px-4 max-w-7xl mx-auto pb-20">
+          
+          {view === 'landing' && (
+             <div className="text-center py-20 animate-in fade-in duration-700">
+               <h1 className="text-7xl md:text-9xl font-black italic tracking-tighter mb-8 uppercase">Impact<br/><span className="text-indigo-600">Study.</span></h1>
+               <button onClick={() => setView('identity')} className="bg-indigo-600 text-white font-black py-6 px-16 rounded-2xl shadow-2xl hover:scale-105 transition-all uppercase">Démarrer</button>
+               <button onClick={() => setView('admin-login')} className="block mx-auto mt-6 text-xs font-bold opacity-30 uppercase tracking-widest">Admin Access</button>
+             </div>
+          )}
+
+          {view === 'identity' && (
+            <div className="max-w-xl mx-auto bg-white dark:bg-[#0c0c0e] p-10 rounded-[3rem] shadow-2xl border dark:border-white/5">
+               <h2 className="text-3xl font-black italic mb-8 uppercase text-center">Identification</h2>
+               <div className="space-y-4">
+                 <input className="w-full bg-slate-100 dark:bg-white/5 p-5 rounded-2xl font-bold outline-none ring-indigo-500 focus:ring-2" placeholder="Nom Complet" onChange={e => setStudent({...student, full_name: e.target.value})}/>
+                 <select className="w-full bg-slate-100 dark:bg-white/5 p-5 rounded-2xl font-bold" onChange={e => setStudent({...student, etablissement: e.target.value})}>
+                    <option value="">Établissement</option><option value="ENCG">ENCG</option><option value="ENSAM">ENSAM</option><option value="EST">EST</option><option value="FS">FS</option>
+                 </select>
+                 <button onClick={() => setView('survey')} className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl mt-4">Commencer le Test</button>
+               </div>
             </div>
-            <button disabled={!student.full_name || !student.sexe} onClick={() => setView('survey')} className="w-full bg-indigo-600 text-white font-black py-5 rounded-2xl shadow-xl">Continuer</button>
-          </div>
-        )}
+          )}
 
-        {view === 'survey' && (
-          <div className="space-y-8 animate-in fade-in">
-            <div className="p-10 rounded-[2.5rem] bg-indigo-600 text-white shadow-2xl">
-               <h2 className="text-4xl font-black italic uppercase">{SURVEY_SCHEMA[currentModule].title}</h2>
+          {view === 'survey' && (
+            <div className="max-w-2xl mx-auto space-y-6">
+               <div className="flex justify-between items-end mb-4">
+                 <h2 className="text-2xl font-black uppercase italic text-indigo-500">{SURVEY_SCHEMA[currentModule].title}</h2>
+                 <span className="text-xs font-bold opacity-40">{currentModule + 1} / 3</span>
+               </div>
+               
+               {SURVEY_SCHEMA[currentModule].questions.map(q => (
+                 <div key={q.id} className="bg-white dark:bg-[#0c0c0e] p-8 rounded-3xl border dark:border-white/5 shadow-sm">
+                    <label className="text-sm font-black uppercase opacity-60 block mb-4">{q.label}</label>
+                    {q.type === 'range' ? (
+                      <div className="flex items-center gap-4">
+                        <span className="text-xs font-bold">1</span>
+                        <input type="range" min={q.min} max={q.max} className="w-full accent-indigo-500" onChange={e => setAnswers({...answers, [q.id]: e.target.value})}/>
+                        <span className="text-xs font-bold">5</span>
+                      </div>
+                    ) : (
+                      <select className="w-full bg-slate-100 dark:bg-white/5 p-4 rounded-xl font-bold" onChange={e => setAnswers({...answers, [q.id]: e.target.value})}>
+                        <option value="">Choisir une option...</option>
+                        {q.options.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    )}
+                 </div>
+               ))}
+               <button onClick={() => currentModule < SURVEY_SCHEMA.length - 1 ? setCurrentModule(m => m + 1) : submitSurvey()} className="w-full bg-indigo-600 text-white font-black py-6 rounded-3xl flex items-center justify-center gap-2 uppercase tracking-tighter">
+                 {currentModule === SURVEY_SCHEMA.length - 1 ? 'Soumettre l\'analyse' : 'Suivant'} <ChevronRight size={20}/>
+               </button>
             </div>
-            {SURVEY_SCHEMA[currentModule].questions.map(q => (
-              <div key={q.id} className="bg-white dark:bg-[#0c0c0e] p-8 rounded-[2rem] shadow-lg border border-transparent hover:border-indigo-500/20 transition-all">
-                <label className="text-lg font-bold mb-6 block">{q.label}</label>
-                {q.type === 'range' ? (
-                  <div className="space-y-4">
-                    <input type="range" min={q.min} max={q.max} className="w-full accent-indigo-600" onChange={e => setAnswers({...answers, [q.id]: e.target.value})}/>
-                    <div className="flex justify-between text-[10px] font-black uppercase opacity-40"><span>Faible</span><span>Elevé</span></div>
-                  </div>
-                ) : (
-                  <select className="w-full bg-slate-100 dark:bg-white/5 p-4 rounded-xl font-bold text-black dark:text-white" onChange={e => setAnswers({...answers, [q.id]: e.target.value})}>
-                    <option value="">Sélectionner...</option>
-                    {q.options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                )}
-              </div>
-            ))}
-            <div className="flex gap-4">
-              <button onClick={() => currentModule < SURVEY_SCHEMA.length - 1 ? setCurrentModule(m => m + 1) : submitSurvey()} className="w-full p-6 bg-indigo-600 text-white rounded-2xl font-black uppercase shadow-xl">
-                {currentModule === SURVEY_SCHEMA.length - 1 ? 'Soumettre' : 'Suivant'}
-              </button>
+          )}
+
+          {view === 'dashboard' && (
+            <div className="space-y-10 animate-in fade-in">
+               <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                 <h2 className="text-4xl font-black italic tracking-tighter">ANALYTICS PANEL</h2>
+                 <button onClick={() => setView('landing')} className="bg-red-500 text-white px-8 py-3 rounded-xl font-black text-xs uppercase">Logout</button>
+               </div>
+
+               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {adminData.map(row => {
+                    const spi = calculateSPI(row);
+                    const cons = getConsequences(spi);
+                    return (
+                      <div key={row.id} className="bg-white dark:bg-[#0c0c0e] p-8 rounded-[2.5rem] border dark:border-white/5 shadow-lg group">
+                        <h4 className="font-black uppercase text-xl mb-1">{row.full_name}</h4>
+                        <p className="text-[10px] font-black opacity-30 uppercase mb-6">{row.etablissement}</p>
+                        
+                        <div className="flex items-end justify-between mb-4">
+                           <span className={`text-4xl font-black italic ${cons.color}`}>{spi}%</span>
+                           <span className="text-[10px] font-bold opacity-40 uppercase">Success Prop.</span>
+                        </div>
+
+                        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-white/5 space-y-2">
+                           <div className={`text-[10px] font-black uppercase ${cons.color}`}>{cons.label}</div>
+                           <p className="text-[11px] font-medium leading-relaxed opacity-70">{cons.desc}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {view === 'admin-login' && (
-          <div className="max-w-md mx-auto bg-white dark:bg-[#0c0c0e] p-12 rounded-[2.5rem] shadow-2xl text-center space-y-8 animate-in zoom-in">
-            <Shield size={60} className="mx-auto text-indigo-500"/>
-            <h3 className="text-xl font-black uppercase">Administration</h3>
-            <input 
-              type="password" 
-              autoFocus
-              placeholder="CODE D'ACCÈS" 
-              className="w-full bg-slate-100 dark:bg-white/5 p-5 rounded-2xl text-center font-black tracking-[0.5em] focus:ring-2 ring-indigo-500 outline-none" 
-              onChange={e => setPassAttempt(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && loadAdmin()} 
-            />
-            <button onClick={loadAdmin} className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black uppercase shadow-lg">Entrer</button>
-          </div>
-        )}
+          {view === 'admin-login' && (
+             <div className="max-w-md mx-auto p-12 bg-white dark:bg-[#0c0c0e] rounded-[3rem] shadow-2xl text-center">
+               <Lock size={40} className="mx-auto text-indigo-600 mb-6"/>
+               <input type="password" autoFocus className="w-full bg-slate-100 dark:bg-white/5 p-5 rounded-2xl text-center font-black outline-none mb-4" placeholder="PASSWORD" onChange={e => setPassAttempt(e.target.value)} onKeyDown={e => e.key === 'Enter' && loadAdmin()}/>
+               <button onClick={loadAdmin} className="w-full bg-indigo-600 text-white py-5 rounded-2xl font-black uppercase">Login</button>
+             </div>
+          )}
 
-        {view === 'dashboard' && (
-          <div className="fixed inset-0 z-[100] bg-[#F8FAFC] dark:bg-[#050507] overflow-y-auto p-4 md:p-8">
-            <div className="max-w-7xl mx-auto space-y-10">
-              <div className="flex justify-between items-center border-b border-black/5 dark:border-white/10 pb-8">
-                <h2 className="text-4xl font-black italic uppercase flex items-center gap-4"><TrendingUp className="text-indigo-500"/> Rapport Scientifique 2026</h2>
-                <button onClick={() => setView('landing')} className="bg-red-500 text-white px-8 py-3 rounded-xl font-black uppercase text-xs">Fermer</button>
+          {view === 'success' && (
+            <div className="text-center py-20 space-y-8 animate-in zoom-in">
+              <div className="w-24 h-24 bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto">
+                <CheckCircle size={50}/>
               </div>
-
-              {/* STATS GRID */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white dark:bg-[#0c0c0e] p-8 rounded-3xl shadow-xl border-l-8 border-indigo-500">
-                  <span className="text-[10px] font-black uppercase opacity-40">Hypothèse</span>
-                  <p className="text-sm font-bold mt-2 italic">"Le smartphone altère directement la capacité de mémorisation en période d'examen."</p>
-                </div>
-                <div className="bg-white dark:bg-[#0c0c0e] p-8 rounded-3xl shadow-xl border-l-8 border-pink-500">
-                  <span className="text-[10px] font-black uppercase opacity-40">Moyenne Stress (Femmes)</span>
-                  <p className="text-4xl font-black mt-2">{(stats.gender.Femme.s / (stats.gender.Femme.c || 1)).toFixed(2)}</p>
-                </div>
-                <div className="bg-white dark:bg-[#0c0c0e] p-8 rounded-3xl shadow-xl border-l-8 border-blue-500">
-                  <span className="text-[10px] font-black uppercase opacity-40">Moyenne Stress (Hommes)</span>
-                  <p className="text-4xl font-black mt-2">{(stats.gender.Homme.s / (stats.gender.Homme.c || 1)).toFixed(2)}</p>
-                </div>
-              </div>
-
-              {/* TABLE DES CONSÉQUENCES */}
-              <div className="bg-white dark:bg-[#0c0c0e] rounded-[3rem] shadow-2xl overflow-hidden">
-                <div className="p-8 bg-indigo-600 text-white flex justify-between items-center">
-                  <h3 className="font-black uppercase flex items-center gap-2"><Skull size={20}/> Classification & Conséquences Académiques</h3>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead className="bg-slate-50 dark:bg-white/5 text-[10px] font-black uppercase">
-                      <tr>
-                        <th className="p-6">Étudiant / Âge</th>
-                        <th className="p-6">Classification</th>
-                        <th className="p-6">L3awa9ib (Conséquences)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-black/5 dark:divide-white/5 font-bold">
-                      {adminData.map(row => {
-                        const analysis = analyzeProfile(row);
-                        return (
-                          <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                            <td className="p-6">
-                              <span className="uppercase italic block">{row.full_name}</span>
-                              <span className="text-[10px] opacity-40">{row.age} ans | {row.etablissement}</span>
-                            </td>
-                            <td className={`p-6 uppercase text-xs ${analysis.color}`}>
-                              <span className="bg-current/10 px-3 py-1 rounded-full">{analysis.class}</span>
-                            </td>
-                            <td className="p-6 text-xs max-w-xs leading-relaxed opacity-80">
-                              {analysis.consequences}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <h2 className="text-5xl font-black italic uppercase">C'est fait.</h2>
+              <p className="max-w-md mx-auto font-bold opacity-50">Tes réponses ont été envoyées au système central pour l'étude statistique.</p>
+              <button onClick={() => window.location.reload()} className="bg-indigo-600 text-white font-black py-5 px-12 rounded-2xl uppercase shadow-xl">Quitter</button>
             </div>
-          </div>
-        )}
+          )}
 
-        {view === 'success' && (
-          <div className="text-center py-20 space-y-10">
-            <CheckCircle size={100} className="mx-auto text-emerald-500 animate-bounce"/>
-            <h2 className="text-6xl font-black italic uppercase">Données Enregistrées</h2>
-            <button onClick={() => window.location.reload()} className="p-6 bg-indigo-600 text-white rounded-2xl font-black px-16 shadow-xl">Nouveau Sondage</button>
-          </div>
-        )}
-
-      </main>
-
-      {loading && (
-        <div className="fixed inset-0 z-[300] bg-black/80 backdrop-blur-2xl flex flex-col items-center justify-center text-white">
-          <Cpu size={50} className="animate-spin mb-4 text-indigo-500"/>
-          <p className="font-black uppercase tracking-widest text-xs">Traitement des Données...</p>
-        </div>
-      )}
+        </main>
+      </div>
     </div>
   );
 }
